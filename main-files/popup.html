@@ -17,6 +17,10 @@
         display: flex;
         justify-content: space-between;
       }
+
+      #no-display {
+        display: none;
+      }
     </style>
 
     <script src="popup.js"></script>
@@ -28,5 +32,6 @@
       <button type="button" id="save-or-remove">Save current page</button>
       <button type="button" id="display">Display random page</button>
     </div>
+    <span id="no-display">Oh no! You have no saved pages to display. Save a page first!</span>
   </body>
 </html>
