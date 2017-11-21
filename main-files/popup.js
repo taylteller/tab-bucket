@@ -8,10 +8,11 @@ function getCurrentTabUrl(callback) {
   };
 
   chrome.tabs.query(queryInfo, (tabs) => {
+    console.log('tabs',tabs);
     var tab = tabs[0];
     var url = tab.url;
-    console.assert(typeof url == 'string', 'tab.url should be a string');
-    callback(url);
+    var title = tab.title;
+    callback({url: url, title: title});
   })
   ;
 }
@@ -32,26 +33,32 @@ on other button press,
 select random item from array
 display it in new tab
 
-fix UI
-
 should also be a button to manage saved pages
 when clicked it opens a page with all the saved pages and option to remove them
 could use a specific html page that opens in a new tab, a foreach that displays
 each array item as an openable link (in new tab) with a remove option next to it
 
-^could also have an option to import all your bookmarks, if that's feasible
-or if not, maybe just select randomly from bookmarks AND saved pages (as an option)
+add a checkbox under the 'display random page' button that when clicked makes the extension
+choose randomly between a bookmark page and an app page. make sure the index for saved pages is non zero
+could even make it so it checks how many items in bookmarks vs how many items in saved pages and
+the probability of landing one or the other is proportional to the number of saved pages in each
+
+fix UI
+make icon
 */
 
 document.addEventListener('DOMContentLoaded', () => {
-  chrome.storage.sync.get({storedUrls: []}, function (result) {
+  chrome.storage.sync.get({storedPages: []}, function (result) {
 
-    var storedUrls = result.storedUrls;
+    var storedPages = result.storedPages;
     var saveOrRemove = document.getElementById('save-or-remove');
     var noDisplay = document.getElementById('no-display');
+    var manage = document.getElementById('manage');
 
-    getCurrentTabUrl((url) => {
-      var index = storedUrls.indexOf(url);
+    getCurrentTabUrl((pageObject) => {
+
+      var index = storedPages.findIndex(storedObjects => storedObjects.url === pageObject.url);
+
       if (index > -1) {
         saveOrRemove.innerText = "Remove from saved pages";
       }
@@ -60,28 +67,33 @@ document.addEventListener('DOMContentLoaded', () => {
       saveOrRemove.addEventListener('click', function () {
         noDisplay.style.display = "none";
         if (index > -1) {
-          //remove url from array, update button & index
-          storedUrls.splice(index, 1);
+          //remove pageObject from array, update button & index
+          storedPages.splice(index, 1);
           saveOrRemove.innerText = "Save current page";
           index = -1;
         } else {
-          //add url to array, update button & index
-          storedUrls.push(url);
+          //add pageObject to array, update button & index
+          storedPages.push(pageObject);
           saveOrRemove.innerText = "Remove from saved pages";
-          index = storedUrls.length - 1;
+          index = storedPages.length - 1;
         }
         //then add it back to the stored array
-        chrome.storage.sync.set({storedUrls: storedUrls});
+        chrome.storage.sync.set({storedPages: storedPages});
       });
 
+      //display random URL in new tab
       display.addEventListener('click', function () {
-        if (storedUrls.length > 0) {
-          var randomUrl = storedUrls[Math.floor(Math.random() * storedUrls.length)];
-          console.log('randomUrl',randomUrl);
-          chrome.tabs.create({ url: randomUrl });
+        if (storedPages.length > 0) {
+          var randomPage = storedPages[Math.floor(Math.random() * storedPages.length)];
+          chrome.tabs.create({ url: randomPage.url });
         } else {
           noDisplay.style.display = "block";
         }
+      });
+
+      //if user clicks Settings, open settings in new tab
+      manage.addEventListener('click', function () {
+        chrome.tabs.create({ url: 'manage.html' });
       });
     });
   });
