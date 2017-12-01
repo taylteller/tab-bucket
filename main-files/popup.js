@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     var storedPages = result.storedPages;
     var saveOrRemove = document.getElementById('save-or-remove');
+    var saveOrRemoveLabel = document.getElementById('save-or-remove-label');
     var noDisplay = document.getElementById('no-display');
     var manage = document.getElementById('manage');
 
@@ -41,7 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
       var index = storedPages.findIndex(storedObjects => storedObjects.url === pageObject.url);
 
       if (index > -1) {
-        saveOrRemove.innerText = "Remove from saved pages";
+        saveOrRemove.innerText = "Remove!";
+        saveOrRemoveLabel.innerText = "Page is saved! Remove it from tab bucket?";
       }
 
       //if user clicks save or remove, it should save or remove page as appropriate
@@ -50,12 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (index > -1) {
           //remove pageObject from array, update button & index
           storedPages.splice(index, 1);
-          saveOrRemove.innerText = "Save current page";
+          saveOrRemove.innerText = "Save!";
+          saveOrRemoveLabel.innerText = "Save this page in tab bucket?";
           index = -1;
         } else {
           //add pageObject to array, update button & index
           storedPages.push(pageObject);
-          saveOrRemove.innerText = "Remove from saved pages";
+          saveOrRemove.innerText = "Remove!";
+          saveOrRemoveLabel.innerText = "Page is saved! Remove it from tab bucket?";
           index = storedPages.length - 1;
         }
         //then add it back to the stored array
@@ -82,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             var randomPage = pagesToChooseFrom[Math.floor(Math.random() * pagesToChooseFrom.length)];
             chrome.tabs.create({ url: randomPage.url });
           } else {
-            noDisplay.style.display = "block";
+            noDisplay.style.display = "flex";
           }
         });
 
