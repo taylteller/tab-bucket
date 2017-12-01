@@ -8,7 +8,6 @@ function getCurrentTabUrl(callback) {
   };
 
   chrome.tabs.query(queryInfo, (tabs) => {
-    console.log('tabs',tabs);
     var tab = tabs[0];
     var url = tab.url;
     var title = tab.title;
@@ -17,37 +16,19 @@ function getCurrentTabUrl(callback) {
   ;
 }
 
+//extract all URLs from bookmarks tree
+function extractUrlsFromTree(node, array) {
+  if(node.children) {
+    node.children.forEach(function(child) { extractUrlsFromTree(child, array); });
+  }
 
-/*
-search array for url
-store true/false url found
-if true
-show different message
-else show default
-
-on button press, if true
-remove url from array
-else add url to array
-
-on other button press,
-select random item from array
-display it in new tab
-
-should also be a button to manage saved pages
-when clicked it opens a page with all the saved pages and option to remove them
-could use a specific html page that opens in a new tab, a foreach that displays
-each array item as an openable link (in new tab) with a remove option next to it
-
-add a checkbox under the 'display random page' button that when clicked makes the extension
-choose randomly between a bookmark page and an app page. make sure the index for saved pages is non zero
-could even make it so it checks how many items in bookmarks vs how many items in saved pages and
-the probability of landing one or the other is proportional to the number of saved pages in each
-
-fix UI
-make icon
-*/
+  if(node.url) {
+    array.push({url: node.url});
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+
   chrome.storage.sync.get({storedPages: []}, function (result) {
 
     var storedPages = result.storedPages;
@@ -83,15 +64,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
       //display random URL in new tab
       display.addEventListener('click', function () {
-        if (storedPages.length > 0) {
-          var randomPage = storedPages[Math.floor(Math.random() * storedPages.length)];
-          chrome.tabs.create({ url: randomPage.url });
-        } else {
-          noDisplay.style.display = "block";
-        }
+        var bookmarks = document.getElementById('bookmarks').checked;
+        var bookmarksArr = [];
+        var pagesToChooseFrom = storedPages;
+
+        //handle including bookmarks in bucket
+        chrome.bookmarks.getTree(function (tree) {
+          tree.forEach(function (item) {
+            extractUrlsFromTree(item, bookmarksArr);
+          });
+
+          if (bookmarks) {
+            pagesToChooseFrom = storedPages.concat(bookmarksArr);
+          }
+
+          if (pagesToChooseFrom.length > 0) {
+            var randomPage = pagesToChooseFrom[Math.floor(Math.random() * pagesToChooseFrom.length)];
+            chrome.tabs.create({ url: randomPage.url });
+          } else {
+            noDisplay.style.display = "block";
+          }
+        });
+
       });
 
-      //if user clicks Settings, open settings in new tab
+      //if user clicks Manage, open saved pages page in new tab
       manage.addEventListener('click', function () {
         chrome.tabs.create({ url: 'manage.html' });
       });
