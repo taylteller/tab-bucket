@@ -29,6 +29,20 @@ function extractUrlsFromTree(node, array) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  //check stored 'include bookmarks' status and set extension state accordingly
+  chrome.storage.sync.get({bookmarks: []}, function (result) {
+    return document.getElementById('bookmarks').checked = result.bookmarks;
+  });
+
+  //store 'include bookmarks' state
+  var checkbox = document.querySelector("input[name=bookmarks]");
+
+  checkbox.addEventListener( 'change', function() {
+    var isBookmarked = document.getElementById('bookmarks').checked;
+    chrome.storage.sync.set({bookmarks: isBookmarked});
+  });
+
+  //check saved page
   chrome.storage.sync.get({storedPages: []}, function (result) {
 
     var storedPages = result.storedPages;
