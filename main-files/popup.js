@@ -49,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
     var saveOrRemove = document.getElementById('save-or-remove');
     var saveOrRemoveLabel = document.getElementById('save-or-remove-label');
     var noDisplay = document.getElementById('no-display');
-    var manage = document.getElementById('manage');
 
     getCurrentTabUrl((pageObject) => {
 
@@ -103,13 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
             noDisplay.style.display = "flex";
           }
         });
-
       });
 
-      //if user clicks Manage, open saved pages page in new tab
-      manage.addEventListener('click', function () {
-        chrome.tabs.create({ url: 'manage.html' });
-      });
     });
+  });
+
+  //if user clicks Manage, open saved pages page in new tab
+  var manage = document.getElementById('manage');
+
+  manage.addEventListener('click', function () {
+    chrome.tabs.create({ url: 'manage.html' });
   });
 });
