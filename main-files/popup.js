@@ -10,69 +10,107 @@ function getCurrentTabUrl(callback) {
   chrome.tabs.query(queryInfo, (tabs) => {
     var tab = tabs[0];
     var url = tab.url;
-    console.assert(typeof url == 'string', 'tab.url should be a string');
-    callback(url);
+    var title = tab.title;
+    callback({url: url, title: title});
   })
   ;
 }
 
+//extract all URLs from bookmarks tree
+function extractUrlsFromTree(node, array) {
+  if(node.children) {
+    node.children.forEach(function(child) { extractUrlsFromTree(child, array); });
+  }
 
-/*
-search array for url
-store true/false url found
-if true
-show different message
-else show default
-
-on button press, if true
-remove url from array
-else add url to array
-
-on other button press,
-select random item from array
-display it in new tab
-
-fix UI
-
-should also be a button to manage saved pages
-when clicked it opens a page with all the bookmarks and option to remove them
-could use a specific html page that opens in a new tab, a foreach that displays
-each array item as an openable link (in new tab) with a remove option next to it
-*/
+  if(node.url) {
+    array.push({url: node.url});
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-  chrome.storage.sync.get({storedUrls: []}, function (result) {
-    console.log('result.storedUrls', result.storedUrls);
-    var storedUrls = result.storedUrls;
+
+  //check stored 'include bookmarks' status and set extension state accordingly
+  chrome.storage.sync.get({bookmarks: []}, function (result) {
+    return document.getElementById('bookmarks').checked = result.bookmarks;
+  });
+
+  //store 'include bookmarks' state
+  var checkbox = document.querySelector("input[name=bookmarks]");
+
+  checkbox.addEventListener( 'change', function() {
+    var isBookmarked = document.getElementById('bookmarks').checked;
+    chrome.storage.sync.set({bookmarks: isBookmarked});
+  });
+
+  //check saved page
+  chrome.storage.sync.get({storedPages: []}, function (result) {
+
+    var storedPages = result.storedPages;
     var saveOrRemove = document.getElementById('save-or-remove');
-    getCurrentTabUrl((url) => {
-      var index = storedUrls.indexOf(url);
+    var saveOrRemoveLabel = document.getElementById('save-or-remove-label');
+    var noDisplay = document.getElementById('no-display');
+
+    getCurrentTabUrl((pageObject) => {
+
+      var index = storedPages.findIndex(storedObjects => storedObjects.url === pageObject.url);
+
       if (index > -1) {
-        saveOrRemove.innerText = "Remove from saved pages";
+        saveOrRemove.innerText = "Remove!";
+        saveOrRemoveLabel.innerText = "Page is saved! Remove it from tab bucket?";
       }
-      console.log('index', index);
 
       //if user clicks save or remove, it should save or remove page as appropriate
       saveOrRemove.addEventListener('click', function () {
+        noDisplay.style.display = "none";
         if (index > -1) {
-          //remove url from array, update button & index
-          storedUrls.splice(index, 1);
-          saveOrRemove.innerText = "Save current page";
+          //remove pageObject from array, update button & index
+          storedPages.splice(index, 1);
+          saveOrRemove.innerText = "Save!";
+          saveOrRemoveLabel.innerText = "Save this page in tab bucket?";
           index = -1;
-          console.log('index2', index);
         } else {
-          //add url to array, update button & index
-          storedUrls.push(url);
-          saveOrRemove.innerText = "Remove from saved pages";
-          index = storedUrls.length - 1;
-          console.log('index3', index);
+          //add pageObject to array, update button & index
+          storedPages.push(pageObject);
+          saveOrRemove.innerText = "Remove!";
+          saveOrRemoveLabel.innerText = "Page is saved! Remove it from tab bucket?";
+          index = storedPages.length - 1;
         }
         //then add it back to the stored array
-        chrome.storage.sync.set({storedUrls: storedUrls});
-        chrome.storage.sync.get(null, function (result) {
-          console.log('result after setting', result);
+        chrome.storage.sync.set({storedPages: storedPages});
+      });
+
+      //display random URL in new tab
+      display.addEventListener('click', function () {
+        var bookmarks = document.getElementById('bookmarks').checked;
+        var bookmarksArr = [];
+        var pagesToChooseFrom = storedPages;
+
+        //handle including bookmarks in bucket
+        chrome.bookmarks.getTree(function (tree) {
+          tree.forEach(function (item) {
+            extractUrlsFromTree(item, bookmarksArr);
+          });
+
+          if (bookmarks) {
+            pagesToChooseFrom = storedPages.concat(bookmarksArr);
+          }
+
+          if (pagesToChooseFrom.length > 0) {
+            var randomPage = pagesToChooseFrom[Math.floor(Math.random() * pagesToChooseFrom.length)];
+            chrome.tabs.create({ url: randomPage.url });
+          } else {
+            noDisplay.style.display = "flex";
+          }
         });
       });
+
     });
+  });
+
+  //if user clicks Manage, open saved pages page in new tab
+  var manage = document.getElementById('manage');
+
+  manage.addEventListener('click', function () {
+    chrome.tabs.create({ url: 'manage.html' });
   });
 });

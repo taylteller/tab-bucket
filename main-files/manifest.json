@@ -2,8 +2,8 @@
   "manifest_version": 2,
 
   "name": "Tab Bucket",
-  "description": "Got a browser full of open tabs to 'read later'? This extension allows you to store pages and allows you to have one displayed randomly.",
-  "version": "1.0",
+  "description": "Got a browser full of open tabs to 'read later'? This extension allows you to store pages and display one (or a bookmark) randomly.",
+  "version": "1.1",
 
   "browser_action": {
     "default_icon": "icon.png",
@@ -11,6 +11,7 @@
   },
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "bookmarks"
   ]
 }

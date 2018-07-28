@@ -9,13 +9,39 @@
       }
 
       h1 {
-        font-size: 15px;
+        font-size: 1.5em;
+        text-align: center;
+      }
+      h2 {
+        font-size: 1.2em;
+        text-align: center;
+        margin: 1em 2em;
+      }
+      hr {
+        margin: 0 1em;
       }
 
-      #container {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
+      .container {
+        margin: 1em 0;
+      }
+
+      #no-display {
+        display: none;
+        color: red;
+        white-space: normal;
+      }
+
+      .button {
+        background-color: #000487;
+        border-radius: 5px;
+        border: none;
+        color: white;
+        padding: 0.5em;
+        margin-left: 1em;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
       }
     </style>
 
@@ -23,10 +49,21 @@
   </head>
 
   <body>
-    <h1>Save current page to bucket or display random page from bucket</h1>
-    <div id="container">
-      <button type="button" id="save-or-remove">Save current page</button>
-      <button type="button" id="display">Display random page</button>
+    <h1>Tab Bucket</h1>
+    <h2>Save pages and display one randomly!</h2>
+    <hr>
+    <div class="container">
+      <span id="save-or-remove-label">Save this page in tab bucket?</span><button type="button" id="save-or-remove" class="button">Save!</button>
+    </div>
+    <div class="container">
+      <span>Display random page?</span><button type="button" id="display" class="button">Go!</button>
+      <br><input type="checkbox" name="bookmarks" value="bookmarks" id="bookmarks">Include bookmarks<br>
+      <br><span id="no-display">Oh no! You have no saved pages to display. Save a page first!</span>
+    </div>
+
+
+    <div>
+      <a id="manage" href="#">Manage saved pages</a>
     </div>
   </body>
 </html>
